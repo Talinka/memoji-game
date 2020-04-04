@@ -1,0 +1,183 @@
+.text {
+	font-family: Arial;
+	color: #434344;
+	font-weight: bold;
+}
+
+h1 {
+	font-size: 42px;	
+	line-height: 47px;
+	margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+body {
+	background: #CFD0CF;
+	text-align: center;
+}
+
+.main {
+	display: inline-block;
+}
+
+.cards {
+	display: grid;
+	grid-template-columns: 130px 130px 130px 130px;
+	grid-column-gap: 25px;
+	grid-row-gap: 25px;
+}
+
+.card {
+	width: 120px;
+	height: 120px;
+	border: 5px solid #ffffff;
+	border-radius: 9px;
+	box-shadow: 1px 1px 10px rgba(0, 0, 0, 0.5);
+	perspective: 600px;
+	
+	transform-style: preserve-3d;		
+}
+
+.side {
+	position:absolute;
+	width: 100%;
+	height: 100%;
+	font-size: 75px;
+	text-align: center;
+	line-height: 120px;
+	backface-visibility:hidden;	
+}
+
+.front {
+	background-image: linear-gradient(to top right, #22AB93, #19668D);
+}
+
+.back {
+	background: #ffffff;
+	transform: rotateY(180deg);
+}
+
+.card.card_rotated {   
+	animation: card_rotate 0.5s linear;
+    animation-fill-mode: forwards;      
+}
+
+
+.card.card_right .back {
+	background : #5ad66f;
+}
+
+.card.card_failed .back{
+	background : #f44336; 
+}
+
+@keyframes card_rotate {
+	to {		
+		transform: rotateY(180deg);							
+	}
+}
+
+.card.card_closed {   
+	animation: card_close 0.5s linear;
+    animation-fill-mode: forwards;      
+}
+
+@keyframes card_close {
+	from {		
+		transform: rotateY(180deg);							
+	}	
+}
+
+.timer {	
+	font-size: 32px;
+	line-height: 36px;
+	margin-top: 30px;
+}
+
+.result_canvas {
+	/* It's trick for the transparent background and the opaque content
+	/* background: #000000;
+	 * opacity: 0.5; */
+	 
+	background: rgba(0, 0, 0, 0.5);
+	position: absolute;	
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	display: none;	
+}
+
+.result_canvas:after {
+    display: inline-block;
+    height: 100%;
+    vertical-align: middle;
+    content: "";   
+}
+
+.show {
+	display: block;
+}
+
+.result_window {
+	background: #ffffff;
+	min-width: 350px;		
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.result_msg {
+	font-size: 48px;
+	margin-top: 30px;
+	width: fit-content;
+	margin-left : auto;
+	margin-right: auto;
+	display: flex;
+}
+
+.button {
+	display: inline-block;
+	background-image: linear-gradient(to top right, #22AB93, #19668D);
+	color: #ffffff;
+	height: 40px;
+	margin-top: 40px;
+	margin-bottom: 30px;
+	line-height: 40px;
+	font-size: 20px;
+	padding: 0 30px 0 30px;
+	cursor: pointer;
+	border-radius: 9px;	
+	box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.button.clicked {
+	box-shadow: -2px -1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.word {	
+	animation: dancing_word 0.8s linear;	
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+}
+
+@keyframes dancing_word {
+	80%, to {
+		
+		transform: translateY(-15px) scaleY(1.5);				
+	}
+}
+
+.l2 {
+	animation-delay: 0.4s;
+	
+}
+
+.l3 {
+	animation-delay: 0.8s;
+	
+}
+
+.l4 {
+	animation-delay: 1.2s;
+	
+}
