@@ -1,184 +1,201 @@
 const emoji = ['🐶', '🐰', '🐼', '🐨', '🐯', '🐊'];
-const ROTATED = "card_rotated";
-const WRONG = "card_failed";
-const RIGHT = "card_right";
-const CLOSED = "card_closed";
-const SHOW = "show";
+const rotated = 'card_rotated';
+const wrong = 'card_failed';
+const right = 'card_right';
+const closed = 'card_closed';
+const show = 'show';
 
-function Card(id, emojiIndex, element) {
-	this.id = id;
-	this.emojiIndex = emojiIndex;
-	this.domElement = element;
-	var backSide = element.querySelector(".back");
-	var em = document.createTextNode(emoji[emojiIndex]);
-	backSide.appendChild(em);
-	this.removeClass = function(class_name) {
-		if (this.domElement.classList.contains(class_name))
-			this.domElement.classList.remove(class_name);
-	}
-	this.addClass = function(class_name) {
-		if (!this.domElement.classList.contains(class_name))
-			this.domElement.classList.add(class_name);
-	}
-	this.changeEmoji = function(emojiIndex) {
-		this.emojiIndex = emojiIndex;
-		var backSide = this.domElement.querySelector(".back");
-		backSide.innerText = "";
-		var em = document.createTextNode(emoji[emojiIndex]);
-		backSide.appendChild(em);
-	}
+function Card(cardId, emojiId, element) {
+  this.id = cardId;
+  this.emojiId = emojiId;
+  this.domElement = element;
+  this.backSide = element.querySelector('.back');
+  const em = document.createTextNode(emoji[emojiId]);
+  this.backSide.appendChild(em);
+
+  this.isClosed = function () {
+    return this.domElement.classList.contains(closed);
+  }
+
+  this.isOpened = function () {
+    return this.domElement.classList.contains(rotated);
+  }
+
+  this.rotate = function () {
+    this.domElement.classList.toggle(rotated);
+    this.domElement.classList.toggle(closed);
+  }
+
+  this.close = function () {
+    if (this.isClosed()) {
+      return;
+    }
+    this.rotate();
+    this.domElement.classList.remove(right);
+    this.domElement.classList.remove(wrong);
+  }
+
+  this.setRight = function () {
+    this.domElement.classList.add(right);
+  }
+
+  this.setWrong = function () {
+    this.domElement.classList.add(wrong);
+  }
+
+  this.changeEmoji = function (emojiId) {
+    this.emojiIndex = emojiId;
+    this.backSide.innerText = '';
+    const em = document.createTextNode(emoji[emojiId]);
+    this.backSide.appendChild(em);
+  }
 }
 
-function Cards() {
-	this.firstCard = null;
-	this.secondCard = null;
-	this.openedCount = 0;	
-	this.indexes = [];
-	for (var i = 0; i < 6; i++) {
-		this.indexes.push(i);
-		this.indexes.push(i);
-	}
-	this.cards = [];
-	shuffle(this.indexes);
-	this.cardsElement = document.getElementById("cards_id");		
-	var cardElements = Array.from(document.querySelectorAll(".card"));
-	for (var i=0; i < cardElements.length; i++) {
-		var card_element = cardElements[i];		
-		this.cards.push(new Card(i, this.indexes[i], card_element));
-	}
-	
-	this.openCard = function(index) {
-		var card = this.cards[index];		
-		if (card.domElement.classList.contains(ROTATED))
-			return;
-		card.removeClass(CLOSED);
-		card.addClass(ROTATED);		
-		if (!this.firstCard) {	
-			this.firstCard = card;
-		} else if (!this.secondCard) {
-			this.secondCard = card;
-			this.checkCards();
-		} else {
-			this.closeWrongCards();
-			this.firstCard = card;
-			this.secondCard = null;
-		}
-	}	
-	
-	this.isPair = function() {
-		return this.firstCard && this.secondCard &&
-			(this.firstCard.emojiIndex == this.secondCard.emojiIndex);
-	}	
-	
-	this.checkWin = function() {
-		var result = this.openedCount == this.cards.length;
-		if (result) {
-			stopTimer(this.timerId);
-			return result;
-		}
-	}	
-	
-	this.checkCards = function () {
-		if (this.isPair()) {
-			this.openedCount += 2;
-			this.firstCard.addClass(RIGHT);
-			this.secondCard.addClass(RIGHT);
-		} else {
-			this.firstCard.addClass(WRONG);
-			this.secondCard.addClass(WRONG);
-		}
-	}
-	
-	this.closeWrongCards = function() {
-		if (!this.isPair()) {
-			this.firstCard.addClass(CLOSED);
-			this.firstCard.removeClass(ROTATED);
-			this.firstCard.removeClass(WRONG);
-			this.secondCard.addClass(CLOSED);
-			this.secondCard.removeClass(ROTATED);
-			this.secondCard.removeClass(WRONG);
-		}
-	}
-	
-	this.clear = function() {
-		stopTimer(this.timerId);
-		this.firstCard = this.secondCard = null;
-		this.openedCount = 0;
-		shuffle(this.indexes);
-		this.cards.forEach( card => {
-			card.addClass(CLOSED);
-			card.removeClass(ROTATED);
-			card.removeClass(RIGHT);
-			card.removeClass(WRONG);
-			card.changeEmoji(this.indexes[card.id]);
-		});
-	}
-	
-	this.start = function() {
-		this.timerId = startTimer();
-	}
+function MemoryGame() {
+  this.pairCount = 6;
+  this.firstCard = null;
+  this.secondCard = null;
+  this.openedPairCount = 0;
+  this.emojiIndexes = [];
+  this.state = 'finished';
+
+  for (let i = 0; i < this.pairCount; i++) {
+    this.emojiIndexes.push(i, i);
+  }
+
+  this.cards = [];
+
+  const cardElements = Array.from(document.querySelectorAll('.card'));
+  for (let i = 0; i < cardElements.length; i++) {
+    const cardElement = cardElements[i];
+    cardElement.addEventListener('click', () => {
+      if (this.state === 'gaming') {
+        this.openCard(i);
+      }
+    });
+    cardElement.addEventListener('animationend', () => {
+      if (this.checkWin()) {
+        this.showResult(true);
+      }
+    });
+    this.cards.push(new Card(i, this.emojiIndexes[i], cardElement));
+  }
+
+  this.openCard = function (id) {
+    const card = this.cards[id];
+    if (card.isOpened()) {
+      return;
+    }
+    card.rotate();
+    if (!this.firstCard) {
+      this.firstCard = card;
+    } else if (!this.secondCard) {
+      this.secondCard = card;
+      this.checkCards();
+    } else {
+      this.closeWrongCards();
+      this.firstCard = card;
+      this.secondCard = null;
+    }
+  }
+
+  this.isPair = function () {
+    return this.firstCard && this.secondCard &&
+      (this.firstCard.emojiIndex == this.secondCard.emojiIndex);
+  }
+
+  this.checkWin = function () {
+    const result = this.openedPairCount == this.pairCount;
+    if (result) {
+      this.stop();
+      return result;
+    }
+  }
+
+  this.checkCards = function () {
+    if (this.isPair()) {
+      this.openedPairCount += 1;
+      this.firstCard.setRight();
+      this.secondCard.setRight();
+    } else {
+      this.firstCard.setWrong();
+      this.secondCard.setWrong();
+    }
+  }
+
+  this.closeWrongCards = function () {
+    if (!this.isPair()) {
+      this.firstCard.close();
+      this.secondCard.close();
+    }
+  }
+
+  this.clear = function () {
+    this.stop();
+    this.firstCard = null;
+    this.secondCard = null;
+    this.openedPairCount = 0;
+    this.cards.forEach(card => card.close());
+  }
+
+  this.stop = function () {
+    clearInterval(this.timerId);
+    this.state = 'finished';
+  }
+
+  this.start = function () {
+    shuffle(this.emojiIndexes);
+    this.cards.forEach(card => card.changeEmoji(this.emojiIndexes[card.id]));
+    const timerElement = document.getElementById('timer');
+    this.state = 'gaming';
+
+    let seconds = 59;
+    timerElement.innerText = '01:00';
+    this.timerId = setInterval(() => {
+      timerElement.innerText = `00:${String(seconds).padStart(2, '0')}`;
+      seconds -= 1;
+      if (seconds < 0) {
+        this.stop();
+        this.showResult(false);
+      }
+    }, 1000);
+  }
+
+  this.showResult = function (isWin) {
+    const msgElement = document.getElementById('msg');
+    msgElement.innerHTML = '';
+    const message = isWin ? 'Win' : 'Lose';
+    for (let i = 0; i < message.length; i++) {
+      const span = document.createElement('span');
+      span.innerText = message[i];
+      span.classList.add('word');
+      span.classList.add(`l${i + 1}`);
+      msgElement.appendChild(span);
+    }
+    document.getElementById('result_window').classList.add(show);
+  }
 }
 
-function startTimer() {
-	var timerElement = document.getElementById("timer");
-	var seconds = 59;
-
-	timerElement.innerText = "01:00";
-	var timerId = setInterval(stepTimer, 1000);
-	return timerId;
-
-	function stepTimer() {
-		timerElement.innerText = "00:" + (seconds < 10 ? "0" : "") + seconds;
-		seconds -= 1;
-		if (seconds < 0) {
-			stopTimer(timerId);
-			showResult(false);
-		}
-	}
-}
-
-function stopTimer(id) {
-	clearInterval(id);
-}
-
-function showResult(isWin) {
-	var msgElement = document.getElementById("msg");
-	// remove all children
-	msgElement.innerHTML = "";
-	var msg = isWin ? "Win" : "Lose";
-	for (var i = 0; i < msg.length; i++) {
-		var span = document.createElement("SPAN");
-		span.innerText = msg[i];
-		span.classList.add("word");
-		span.classList.add("l"+(i+1));
-		msgElement.appendChild(span);
-	}
-	document.getElementById("win").classList.add(SHOW);
-}
 
 function shuffle(array) {
-	for (var i = 0; i < array.length; i++)
-		array[i] = { x: array[i], r: Math.random()};
-	array.sort((a, b) => { return a.r - b.r; });
-	for (var i = 0; i < array.length; i++)
-		array[i] = array[i].x;
+  for (let i = 0; i < array.length; i++)
+    array[i] = { x: array[i], r: Math.random() };
+  array.sort((a, b) => { return a.r - b.r; });
+  for (let i = 0; i < array.length; i++)
+    array[i] = array[i].x;
 }
 
-// Main function
+function app() {
+  const game = new MemoryGame();
 
-function initCards() {
-	var deck = new Cards();
-	deck.cards.forEach(card => {
-		card.domElement.addEventListener("click", function(event) { deck.openCard(card.id); });
-		card.domElement.addEventListener("animationend", function(event) { if (deck.checkWin()) showResult(true); });
-	});
-	deck.start();
-	var button = document.getElementById("button");
-	button.addEventListener("mousedown", function(event) { button.classList.add("clicked"); });
-	button.addEventListener("mouseup", function(event) {
-		button.classList.remove("clicked");
-		document.getElementById("win").classList.remove(SHOW);
-		deck.clear();
-		deck.start(); });
-
+  game.start();
+  const startButton = document.getElementById('start_button');
+  startButton.addEventListener('mousedown', () => startButton.classList.add('clicked'));
+  startButton.addEventListener('mouseup', () => {
+    startButton.classList.remove('clicked');
+    document.getElementById('result_window').classList.remove(show);
+    game.clear();
+    setTimeout(() => game.start(), 600)
+    // game.start();
+  });
 }
