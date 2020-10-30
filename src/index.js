@@ -1,3 +1,5 @@
+import '../css/index.css';
+
 const rotated = 'card_rotated';
 const wrong = 'card_failed';
 const right = 'card_right';
@@ -194,3 +196,5 @@ function app() {
     setTimeout(() => game.start(), 600)
   });
 }
+
+app();
